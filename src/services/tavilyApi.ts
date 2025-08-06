@@ -28,7 +28,7 @@ export interface TavilySearchRequest {
   exclude_domains?: string[];
 }
 
-const TAVILY_API_URL = 'https://api.tavily.com/search';
+const TAVILY_API_URL = '/api/search';
 const API_KEY = import.meta.env.VITE_TAVILY_API_KEY;
 
 export const tavilySearch = async (searchRequest: TavilySearchRequest): Promise<TavilyResponse> => {
