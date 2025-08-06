@@ -24,32 +24,39 @@ const convertToINR = (usdAmount: string): string => {
 
 // Travel agent that processes Tavily results and creates itineraries
 export const generateItinerary = async (query: TravelQuery): Promise<Itinerary> => {
-  // Create search query for Tavily API
-  const searchQuery = createTravelSearchQuery(
-    query.destination,
-    query.theme,
-    query.days,
-    query.groupSize,
-    query.additionalInfo
-  );
+  let tavilyResponse: TavilyResponse | null = null;
+
+  try {
+    // Create search query for Tavily API
+    const searchQuery = createTravelSearchQuery(
+      query.destination,
+      query.theme,
+      query.days,
+      query.groupSize,
+      query.additionalInfo
+    );
+    
+    // Get travel information from Tavily API
+    tavilyResponse = await tavilySearch({
+      query: searchQuery,
+      search_depth: 'advanced',
+      include_answer: true,
+      include_images: false,
+      max_results: 15,
+      include_domains: ['tripadvisor.com', 'lonelyplanet.com', 'timeout.com', 'fodors.com', 'frommers.com']
+    });
+  } catch (error) {
+    console.warn('Tavily API unavailable, using fallback data generation:', error);
+    // Continue with null tavilyResponse to use fallback data
+  }
   
-  // Get travel information from Tavily API
-  const tavilyResponse = await tavilySearch({
-    query: searchQuery,
-    search_depth: 'advanced',
-    include_answer: true,
-    include_images: false,
-    max_results: 15,
-    include_domains: ['tripadvisor.com', 'lonelyplanet.com', 'timeout.com', 'fodors.com', 'frommers.com']
-  });
-  
-  // Process results and create itinerary
+  // Process results and create itinerary (with fallback if API fails)
   const itinerary = processItinerary(query, tavilyResponse);
   
   return itinerary;
 };
 
-const processItinerary = (query: TravelQuery, tavilyResponse: TavilyResponse): Itinerary => {
+const processItinerary = (query: TravelQuery, tavilyResponse: TavilyResponse | null): Itinerary => {
   const { destination, theme, days } = query;
   
   // Generate unique ID
@@ -101,9 +108,9 @@ const createItineraryDescription = (query: TravelQuery): string => {
   return `Perfect ${days}-day ${theme} itinerary for ${groupSize} ${groupSize === 1 ? 'person' : 'people'} exploring the best of ${destination}. Carefully curated recommendations for an unforgettable experience.`;
 };
 
-const generateItineraryDays = (query: TravelQuery, tavilyResponse: TavilyResponse): ItineraryDay[] => {
+const generateItineraryDays = (query: TravelQuery, tavilyResponse: TavilyResponse | null): ItineraryDay[] => {
   const { days, destination, theme } = query;
-  const results = tavilyResponse.results;
+  const results = tavilyResponse?.results || [];
   
   const itineraryDays: ItineraryDay[] = [];
   
@@ -378,11 +385,11 @@ const calculateBudgetEstimate = (query: TravelQuery): string => {
   return `₹${Math.round(totalPerPerson * USD_TO_INR)}/person (₹${Math.round(totalForGroup * USD_TO_INR)} total)`;
 };
 
-const generateTipsFromTavily = (query: TravelQuery, tavilyResponse: TavilyResponse): string[] => {
+const generateTipsFromTavily = (query: TravelQuery, tavilyResponse: TavilyResponse | null): string[] => {
   const { theme, destination, days, groupSize } = query;
   
   // Extract tips from Tavily results
-  const travelInfo = extractTravelInfo(tavilyResponse.results);
+  const travelInfo = tavilyResponse ? extractTravelInfo(tavilyResponse.results) : { tips: [] };
   const tavilyTips = travelInfo.tips.slice(0, 3);
   
   const tips = [
