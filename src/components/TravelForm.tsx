@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, MapPin, Users, Calendar, Sparkles } from 'lucide-react';
+import { Send, MapPin, Users, Calendar, Sparkles, Plus, Minus } from 'lucide-react';
 import { TravelQuery } from '../types/travel';
 
 interface TravelFormProps {
@@ -10,7 +10,7 @@ interface TravelFormProps {
 const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, disabled = false }) => {
   const [destination, setDestination] = useState('');
   const [theme, setTheme] = useState<TravelQuery['theme']>('budget');
-  const [days, setDays] = useState<TravelQuery['days']>(2);
+  const [days, setDays] = useState(2);
   const [groupSize, setGroupSize] = useState(2);
   const [additionalInfo, setAdditionalInfo] = useState('');
 
@@ -21,12 +21,20 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, disabled = false }) =
     const query: TravelQuery = {
       destination: destination.trim(),
       theme,
-      days,
+      days: days as TravelQuery['days'],
       groupSize,
       additionalInfo: additionalInfo.trim() || undefined,
     };
 
     onSubmit(query);
+  };
+
+  const incrementDays = () => {
+    setDays(prev => Math.min(prev + 1, 7)); // Max 7 days
+  };
+
+  const decrementDays = () => {
+    setDays(prev => Math.max(prev - 1, 1)); // Min 1 day
   };
 
   const themes = [
@@ -91,22 +99,26 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, disabled = false }) =
               <Calendar className="w-4 h-4" />
               Trip Duration
             </label>
-            <div className="flex gap-2">
-              {[1, 2].map((dayOption) => (
-                <button
-                  key={dayOption}
-                  type="button"
-                  onClick={() => setDays(dayOption as 1 | 2)}
-                  className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all duration-200 font-medium ${
-                    days === dayOption
-                      ? 'bg-blue-500 text-white border-blue-500 shadow-lg'
-                      : 'bg-white/50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-white/70'
-                  }`}
-                  disabled={disabled}
-                >
-                  {dayOption} Day{dayOption > 1 ? 's' : ''}
-                </button>
-              ))}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={decrementDays}
+                disabled={disabled || days <= 1}
+                className="p-3 bg-white/50 border border-gray-200 rounded-xl hover:bg-white/70 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <div className="flex-1 text-center py-3 px-4 bg-blue-500 text-white rounded-xl border-2 border-blue-500 shadow-lg font-medium">
+                {days} Day{days > 1 ? 's' : ''}
+              </div>
+              <button
+                type="button"
+                onClick={incrementDays}
+                disabled={disabled || days >= 7}
+                className="p-3 bg-white/50 border border-gray-200 rounded-xl hover:bg-white/70 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
           </div>
 

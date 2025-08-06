@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, MapPin, Clock, DollarSign, Star, Share2 } from 'lucide-react';
+import { RefreshCw, MapPin, Clock, Star, Share2 } from 'lucide-react';
 import { Itinerary } from '../types/travel';
 
 interface ItineraryCardProps {
@@ -81,7 +81,7 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({ itinerary, onGenerateAgai
           </div>
           {itinerary.totalBudget && (
             <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
+              <span className="text-lg">₹</span>
               <span>{itinerary.totalBudget}</span>
             </div>
           )}
@@ -122,7 +122,7 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({ itinerary, onGenerateAgai
                     <p className="text-sm text-gray-600 leading-relaxed">{item.description}</p>
                     {item.cost && (
                       <div className="flex items-center gap-1 text-sm font-medium text-green-600 mt-2">
-                        <DollarSign className="w-3 h-3" />
+                        <span className="text-sm">₹</span>
                         <span>{item.cost}</span>
                       </div>
                     )}

@@ -1,6 +1,27 @@
 import { TravelQuery, Itinerary, ItineraryDay, ItineraryItem } from '../types/travel';
 import { tavilySearch, createTravelSearchQuery, extractTravelInfo, TavilyResponse } from './tavilyApi';
 
+// Currency conversion rate (approximate)
+const USD_TO_INR = 83.5;
+
+// Helper function to convert USD to INR
+const convertToINR = (usdAmount: string): string => {
+  // Extract numbers from USD string (e.g., "$15-25" -> [15, 25])
+  const matches = usdAmount.match(/\$(\d+)(?:-(\d+))?/);
+  if (!matches) return usdAmount;
+  
+  const min = parseInt(matches[1]);
+  const max = matches[2] ? parseInt(matches[2]) : min;
+  
+  const minINR = Math.round(min * USD_TO_INR);
+  const maxINR = Math.round(max * USD_TO_INR);
+  
+  if (min === max) {
+    return `₹${minINR}`;
+  }
+  return `₹${minINR}-${maxINR}`;
+};
+
 // Travel agent that processes Tavily results and creates itineraries
 export const generateItinerary = async (query: TravelQuery): Promise<Itinerary> => {
   // Create search query for Tavily API
@@ -133,7 +154,7 @@ const generateDayItems = (dayNum: number, query: TravelQuery, results: any[]): I
         location: getMainAttractionLocation(destination),
         description: getDescriptionFromResults(results, 0) || 'Start your adventure at the most iconic landmark. Perfect for photos and getting oriented.',
         type: 'attraction',
-        cost: theme === 'budget' ? 'Free' : '$15-25'
+        cost: theme === 'budget' ? 'Free' : convertToINR('$15-25')
       },
       {
         time: '12:00 PM',
@@ -141,7 +162,7 @@ const generateDayItems = (dayNum: number, query: TravelQuery, results: any[]): I
         location: getNeighborhood(destination, 1),
         description: getDescriptionFromResults(results, 1) || 'Authentic local cuisine experience.',
         type: 'food',
-        cost: getBudgetRange(theme, 'meal')
+        cost: convertToINR(getBudgetRange(theme, 'meal'))
       },
       {
         time: '2:30 PM',
@@ -149,7 +170,7 @@ const generateDayItems = (dayNum: number, query: TravelQuery, results: any[]): I
         location: getNeighborhood(destination, 2),
         description: getDescriptionFromResults(results, 2) || 'Immerse yourself in local culture and history.',
         type: 'attraction',
-        cost: getBudgetRange(theme, 'attraction')
+        cost: convertToINR(getBudgetRange(theme, 'attraction'))
       },
       {
         time: '6:00 PM',
@@ -157,7 +178,7 @@ const generateDayItems = (dayNum: number, query: TravelQuery, results: any[]): I
         location: getBestViewpoint(destination),
         description: 'End your first day watching the sunset from the best viewpoint, followed by dinner.',
         type: 'activity',
-        cost: getBudgetRange(theme, 'dinner')
+        cost: convertToINR(getBudgetRange(theme, 'dinner'))
       }
     );
   } else {
@@ -169,7 +190,7 @@ const generateDayItems = (dayNum: number, query: TravelQuery, results: any[]): I
         location: getNeighborhood(destination, 3),
         description: getDescriptionFromResults(results, 3) || 'Explore local markets and interact with vendors.',
         type: 'activity',
-        cost: getBudgetRange(theme, 'activity')
+        cost: convertToINR(getBudgetRange(theme, 'activity'))
       },
       {
         time: '1:00 PM',
@@ -177,7 +198,7 @@ const generateDayItems = (dayNum: number, query: TravelQuery, results: any[]): I
         location: getNeighborhood(destination, 4),
         description: getDescriptionFromResults(results, 4) || 'Discover hidden culinary gems in a charming local neighborhood.',
         type: 'food',
-        cost: getBudgetRange(theme, 'tour')
+        cost: convertToINR(getBudgetRange(theme, 'tour'))
       },
       {
         time: '4:00 PM',
@@ -185,7 +206,7 @@ const generateDayItems = (dayNum: number, query: TravelQuery, results: any[]): I
         location: getNeighborhood(destination, 5),
         description: getDescriptionFromResults(results, 5) || getThemeActivityDescription(theme),
         type: getActivityType(theme),
-        cost: getBudgetRange(theme, 'special')
+        cost: convertToINR(getBudgetRange(theme, 'special'))
       },
       {
         time: '7:30 PM',
@@ -193,7 +214,7 @@ const generateDayItems = (dayNum: number, query: TravelQuery, results: any[]): I
         location: 'City Center',
         description: getDescriptionFromResults(results, 6) || 'Perfect ending to your trip with a memorable local experience.',
         type: 'activity',
-        cost: getBudgetRange(theme, 'special')
+        cost: convertToINR(getBudgetRange(theme, 'special'))
       }
     );
   }
@@ -354,7 +375,7 @@ const calculateBudgetEstimate = (query: TravelQuery): string => {
   const totalPerPerson = dailyBudget * days;
   const totalForGroup = totalPerPerson * groupSize;
   
-  return `$${totalPerPerson}/person ($${totalForGroup} total)`;
+  return `₹${Math.round(totalPerPerson * USD_TO_INR)}/person (₹${Math.round(totalForGroup * USD_TO_INR)} total)`;
 };
 
 const generateTipsFromTavily = (query: TravelQuery, tavilyResponse: TavilyResponse): string[] => {

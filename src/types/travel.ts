@@ -1,7 +1,7 @@
 export interface TravelQuery {
   destination: string;
   theme: 'budget' | 'food' | 'culture' | 'nature' | 'luxury' | 'adventure';
-  days: 1 | 2;
+  days: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   groupSize: number;
   additionalInfo?: string;
 }
