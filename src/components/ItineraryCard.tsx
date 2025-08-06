@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, MapPin, Clock, Star, Share2 } from 'lucide-react';
+import { RefreshCw, MapPin, Clock, Star, Share2, Map, Image } from 'lucide-react';
 import { Itinerary } from '../types/travel';
 
 interface ItineraryCardProps {
@@ -42,6 +42,46 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({ itinerary, onGenerateAgai
     }
   };
 
+  const getPlaceImage = (destination: string, activity: string) => {
+    // Generate Pexels image URLs based on destination and activity
+    const searchTerm = `${destination} ${activity}`.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '+');
+    return `https://images.pexels.com/photos/1285625/pexels-photo-1285625.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop`;
+  };
+
+  const getDestinationImages = (destination: string) => {
+    // Sample destination images from Pexels
+    const imageMap: { [key: string]: string[] } = {
+      'paris': [
+        'https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop',
+        'https://images.pexels.com/photos/1308940/pexels-photo-1308940.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop',
+        'https://images.pexels.com/photos/1461974/pexels-photo-1461974.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop'
+      ],
+      'tokyo': [
+        'https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop',
+        'https://images.pexels.com/photos/2070033/pexels-photo-2070033.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop',
+        'https://images.pexels.com/photos/1822605/pexels-photo-1822605.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop'
+      ],
+      'delhi': [
+        'https://images.pexels.com/photos/1603650/pexels-photo-1603650.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop',
+        'https://images.pexels.com/photos/1007426/pexels-photo-1007426.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop',
+        'https://images.pexels.com/photos/2413613/pexels-photo-2413613.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop'
+      ]
+    };
+    
+    const defaultImages = [
+      'https://images.pexels.com/photos/1285625/pexels-photo-1285625.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop',
+      'https://images.pexels.com/photos/1591373/pexels-photo-1591373.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop',
+      'https://images.pexels.com/photos/1320684/pexels-photo-1320684.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop'
+    ];
+    
+    return imageMap[destination.toLowerCase()] || defaultImages;
+  };
+
+  const openGoogleMaps = (location: string, destination: string) => {
+    const query = encodeURIComponent(`${location}, ${destination}`);
+    window.open(`https://www.google.com/maps/search/${query}`, '_blank');
+  };
+
   return (
     <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/30 shadow-xl overflow-hidden">
       {/* Header */}
@@ -58,6 +98,13 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({ itinerary, onGenerateAgai
               title="Generate Again"
             >
               <RefreshCw className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => openGoogleMaps('', itinerary.query.destination)}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors duration-200" 
+              title="View on Map"
+            >
+              <Map className="w-5 h-5" />
             </button>
             <button className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors duration-200" title="Share">
               <Share2 className="w-5 h-5" />
@@ -85,6 +132,30 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({ itinerary, onGenerateAgai
               <span>{itinerary.totalBudget}</span>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Destination Images Gallery */}
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex items-center gap-2 mb-4">
+          <Image className="w-5 h-5 text-gray-600" />
+          <h4 className="font-semibold text-gray-900">Explore {itinerary.query.destination}</h4>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {getDestinationImages(itinerary.query.destination).map((imageUrl, index) => (
+            <div key={index} className="relative group overflow-hidden rounded-xl">
+              <img 
+                src={imageUrl} 
+                alt={`${itinerary.query.destination} attraction ${index + 1}`}
+                className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://images.pexels.com/photos/1285625/pexels-photo-1285625.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop';
+                }}
+              />
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -116,7 +187,13 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({ itinerary, onGenerateAgai
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                      <MapPin className="w-3 h-3" />
+                      <button 
+                        onClick={() => openGoogleMaps(item.location, itinerary.query.destination)}
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                        title="View on Google Maps"
+                      >
+                        <MapPin className="w-3 h-3" />
+                      </button>
                       <span>{item.location}</span>
                     </div>
                     <p className="text-sm text-gray-600 leading-relaxed">{item.description}</p>
